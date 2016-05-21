@@ -4,8 +4,10 @@
 #
 # Protoc's generated header files can include other generated headers, but
 # qmake doesn't know this (because deps are calculated at configure time)
-# depend_command can't be used to add a false dependency at a higher level, but
-# qmake silently removes non-existant files from the output of depend_command.
+# depend_command could theoretically be used to add a false dependency at a
+# higher level, but qmake silently removes non-existant files from the output
+# of depend_command. And the headers we want to depend on are generated, so
+# they don't exist most of the time.
 #
 # There are a few not-so-nice options:
 #  - use system() to (in some cases) invoke protoc as part of qmake
@@ -24,6 +26,8 @@
 # Note that all of this mess is only needed in cases where "import" is used in
 # the proto files. Otherwise, one can just include `protobuf.pri` and have it
 # work without issue.
+#
+# Long term: use cmake (or anything but qmake)
 
 isEmpty(PROTOS):error("Define PROTOS before including protobuf.pri")
 
@@ -47,14 +51,14 @@ QMAKE_EXTRA_COMPILERS += protobuf_decl
 PROTOBUF_HEADERS =
 for(proto, PROTOS) {
 	headers = $$replace(proto, .proto, .pb.h)
-	message("headers: $${headers}")
+	#message("headers: $${headers}")
 	for (header, headers) {
 		PROTOBUF_HEADERS += $${header}
-		message("header: $${header}")
+		#message("header: $${header}")
 	}
 }
 HEADERS += $${PROTOBUF_HEADERS}
-message("protobuf_headers: $${PROTOBUF_HEADERS}")
+#message("protobuf_headers: $${PROTOBUF_HEADERS}")
 
 
 protobuf_impl.name = protobuf sources
