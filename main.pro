@@ -3,7 +3,11 @@ TEMPLATE = lib
 PROTOS = $$files(protobuf/*.proto)
 include(protobuf.pri)
 
+TARGET = qt-test
+
 SOURCES = test.cc
+
+LIBS += $$OUT_PWD/liblocal-protobuf.a
 
 INSTALLS += headers
 headers.path = /usr/include

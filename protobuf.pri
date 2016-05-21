@@ -34,8 +34,8 @@ protobuf_decl.input = PROTOS
 protobuf_decl.output = ${QMAKE_FILE_IN_PATH}/${QMAKE_FILE_BASE}.pb.h
 protobuf_decl.depend_command = $$PWD/protobuf_deps ${QMAKE_FILE_IN_PATH} ${QMAKE_FILE_NAME}
 #protobuf_decl.dependency_type = TYPE_C
-protobuf_decl.commands = sleep 5; $${PROTOC} --cpp_out=${QMAKE_FILE_IN_PATH} --proto_path=${QMAKE_FILE_IN_PATH} ${QMAKE_FILE_NAME}
-protobuf_decl.variable_out = GENERATED_FILES
+protobuf_decl.commands = $${PROTOC} --cpp_out=${QMAKE_FILE_IN_PATH} --proto_path=${QMAKE_FILE_IN_PATH} ${QMAKE_FILE_NAME}
+protobuf_decl.variable_out = HEADERS
 QMAKE_EXTRA_COMPILERS += protobuf_decl
 
 # GENERATED_FILES (or whatever variable we use above) doesn't get populated
@@ -46,11 +46,15 @@ QMAKE_EXTRA_COMPILERS += protobuf_decl
 # Note that this does require that PROTOS is set before including this file.
 PROTOBUF_HEADERS =
 for(proto, PROTOS) {
-	header = $$replace(proto, .proto, .pb.h)
-	PROTOBUF_HEADERS += $${header}
+	headers = $$replace(proto, .proto, .pb.h)
+	message("headers: $${headers}")
+	for (header, headers) {
+		PROTOBUF_HEADERS += $${header}
+		message("header: $${header}")
+	}
 }
 HEADERS += $${PROTOBUF_HEADERS}
-QMAKE_EXTRA_TARGETS += $${PROTOBUF_HEADERS}
+message("protobuf_headers: $${PROTOBUF_HEADERS}")
 
 
 protobuf_impl.name = protobuf sources
@@ -62,14 +66,15 @@ protobuf_impl.output = ${QMAKE_FILE_IN_PATH}/${QMAKE_FILE_BASE}.pb.cc
 # allow the protobuf source files to be built. Including it makes us wait for
 # _all_ protobuf headers to be built.  We can't specify exactly what headers we
 # want, as they don't exist & scanning
-requires using depend_command which ignores non-existant files.
+# requires using depend_command which ignores non-existant files.
 protobuf_impl.depends = ${QMAKE_FILE_IN_PATH}/${QMAKE_FILE_BASE}.pb.h $${PROTOBUF_HEADERS}
 
 protobuf_impl.commands = $$escape_expand(\\n)
 #protobuf_impl.dependency_type = TYPE_C
-protobuf_impl.variable_out = GENERATED_SOURCES
+protobuf_impl.variable_out = SOURCES
 QMAKE_EXTRA_COMPILERS += protobuf_impl
 
+#QMAKE_EXTRA_TARGETS += $${PROTOBUF_HEADERS}
 # XXX: this _trys_ to have the protobuf headers generated first, but in reality
 # they are still generated in parallel to object compilation.
-PRE_TARGETDEPS += "$${PROTOBUF_HEADERS}"
+#PRE_TARGETDEPS += $${PROTOBUF_HEADERS}
